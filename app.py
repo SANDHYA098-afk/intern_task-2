@@ -1,6 +1,7 @@
 app.py
 
-import streamlit as st import requests
+import streamlit as st 
+import requests
 
 st.set_page_config(page_title="Simple Legal AI App") st.title("🧾 Legal Assistant - Simple Version")
 
