@@ -18,25 +18,53 @@ if "step" not in st.session_state:
 
 #-- Module 1: Document Drafting ---
 
-st.header("1. Legal Document Drafting") st.markdown("Answer a few simple questions to generate your legal document.")
+st.header("1. Legal Document Drafting") 
+st.markdown("Answer a few simple questions to generate your legal document.")
 
-if st.session_state.step == 0: st.session_state.party_a_name = st.text_input("Enter Party A's full name:") if st.session_state.party_a_name: st.session_state.step += 1 st.experimental_rerun()
+if st.session_state.step == 0: 
+  st.session_state.party_a_name = st.text_input("Enter Party A's full name:") 
+  if st.session_state.party_a_name: 
+    st.session_state.step += 1 
+    st.experimental_rerun()
 
-elif st.session_state.step == 1: st.session_state.party_a_address = st.text_input("Enter Party A's residential address:") if st.session_state.party_a_address: st.session_state.step += 1 st.experimental_rerun()
+elif st.session_state.step == 1: 
+  st.session_state.party_a_address = st.text_input("Enter Party A's residential address:") 
+  if st.session_state.party_a_address: 
+    st.session_state.step += 1 
+    st.experimental_rerun()
 
-elif st.session_state.step == 2: st.session_state.party_a_contact = st.text_input("Enter Party A's contact number:") if st.session_state.party_a_contact: st.session_state.step += 1 st.experimental_rerun()
+elif st.session_state.step == 2: 
+  st.session_state.party_a_contact = st.text_input("Enter Party A's contact number:") 
+  if st.session_state.party_a_contact: 
+    st.session_state.step += 1 
+    st.experimental_rerun()
 
-elif st.session_state.step == 3: st.session_state.party_b_name = st.text_input("Enter Party B's full name:") if st.session_state.party_b_name: st.session_state.step += 1 st.experimental_rerun()
+elif st.session_state.step == 3: 
+  st.session_state.party_b_name = st.text_input("Enter Party B's full name:") 
+  if st.session_state.party_b_name: 
+    st.session_state.step += 1 
+    st.experimental_rerun()
 
-elif st.session_state.step == 4: st.session_state.party_b_address = st.text_input("Enter Party B's residential address:") if st.session_state.party_b_address: st.session_state.step += 1 st.experimental_rerun()
+elif st.session_state.step == 4: 
+  st.session_state.party_b_address = st.text_input("Enter Party B's residential address:") 
+  if st.session_state.party_b_address: 
+    st.session_state.step += 1 
+    st.experimental_rerun()
 
-elif st.session_state.step == 5: st.session_state.party_b_contact = st.text_input("Enter Party B's contact number:") if st.session_state.party_b_contact: st.session_state.step += 1 st.experimental_rerun()
+elif st.session_state.step == 5: 
+  st.session_state.party_b_contact = st.text_input("Enter Party B's contact number:") 
+  if st.session_state.party_b_contact: 
+    st.session_state.step += 1 
+    st.experimental_rerun()
 
-elif st.session_state.step == 6: # Format and Draft the document a_name = st.session_state.party_a_name.upper() a_addr = st.session_state.party_a_address.title() a_contact = st.session_state.party_a_contact
+elif st.session_state.step == 6: # Format and Draft the document 
+  a_name = st.session_state.party_a_name.upper() 
+  a_addr = st.session_state.party_a_address.title() 
+  a_contact = st.session_state.party_a_contact
 
-b_name = st.session_state.party_b_name.upper()
-b_addr = st.session_state.party_b_address.title()
-b_contact = st.session_state.party_b_contact
+  b_name = st.session_state.party_b_name.upper()
+  b_addr = st.session_state.party_b_address.title()
+  b_contact = st.session_state.party_b_contact
 
 st.session_state.final_draft = f"""
 
@@ -55,12 +83,27 @@ IN WITNESS WHEREOF, the parties have executed this agreement on this day.
 
 ---
 
-{a_name}                    {b_name} """ st.subheader("📄 Drafted Document") st.text_area("", st.session_state.final_draft, height=300) st.button("Reset Form", on_click=lambda: st.session_state.clear())
+{a_name}                    {b_name} """ 
+st.subheader("📄 Drafted Document") 
+st.text_area("", st.session_state.final_draft, height=300) 
+st.button("Reset Form", on_click=lambda: st.session_state.clear())
 
---- Module 2: Legal Clarification ---
+#--- Module 2: Legal Clarification ---
 
-st.header("2. Legal Clarification") st.markdown("Ask a legal question (e.g., What is a void contract?)")
+st.header("2. Legal Clarification") 
+st.markdown("Ask a legal question (e.g., What is a void contract?)")
 
-def get_clarification(query): url = f"https://api.duckduckgo.com/?q={query}&format=json&no_redirect=1&no_html=1" res = requests.get(url) if res.status_code == 200: data = res.json() return data.get("Abstract", "No exact answer found. Try refining your query.") else: return "Error fetching answer."
+def get_clarification(query): 
+  url = f"https://api.duckduckgo.com/?q={query}&format=json&no_redirect=1&no_html=1" 
+  res = requests.get(url) 
+  if res.status_code == 200: 
+    data = res.json() 
+    return data.get("Abstract", "No exact answer found. Try refining your query.") 
+  else: 
+    return "Error fetching answer."
 
-query = st.text_input("Type your legal question:") if query: answer = get_clarification(query) st.markdown("Answer:") st.write(answer)
+query = st.text_input("Type your legal question:") 
+if query:
+  answer = get_clarification(query) 
+  st.markdown("Answer:") 
+  st.write(answer)
