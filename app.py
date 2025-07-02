@@ -1,28 +1,58 @@
 app.py
 
-import streamlit as st 
-import requests
+import streamlit as st import requests
 
-st.set_page_config(page_title="Simple Legal AI App") st.title("🧾 Legal Assistant - Simple Version")
+st.set_page_config(page_title="Legal AI Assistant") st.title("📜 Legal Document & Clarification Assistant")
 
---- Memory for conversation ---
+--- Memory State ---
 
-if "chat_memory" not in st.session_state: st.session_state.chat_memory = []
+if "step" not in st.session_state: st.session_state.step = 0 st.session_state.party_a_name = "" st.session_state.party_a_address = "" st.session_state.party_a_contact = "" st.session_state.party_b_name = "" st.session_state.party_b_address = "" st.session_state.party_b_contact = "" st.session_state.final_draft = ""
 
---- Module 1: Conversational Document Drafting ---
+--- Module 1: Document Drafting ---
 
-st.header("1. Document Drafting") draft_input = st.text_input("Describe the legal document you want (e.g., NDA between two parties):")
+st.header("1. Legal Document Drafting") st.markdown("Answer a few simple questions to generate your legal document.")
 
-if draft_input: doc_response = f"Here is a basic draft based on your request:\n\nThis is a {draft_input}. Please review and customize party names, dates, and terms as needed.\n\n---\n\n[Legal Content Placeholder]" st.session_state.chat_memory.append((draft_input, doc_response)) st.markdown("Drafted Document:") st.write(doc_response)
+if st.session_state.step == 0: st.session_state.party_a_name = st.text_input("Enter Party A's full name:") if st.session_state.party_a_name: st.session_state.step += 1 st.experimental_rerun()
+
+elif st.session_state.step == 1: st.session_state.party_a_address = st.text_input("Enter Party A's residential address:") if st.session_state.party_a_address: st.session_state.step += 1 st.experimental_rerun()
+
+elif st.session_state.step == 2: st.session_state.party_a_contact = st.text_input("Enter Party A's contact number:") if st.session_state.party_a_contact: st.session_state.step += 1 st.experimental_rerun()
+
+elif st.session_state.step == 3: st.session_state.party_b_name = st.text_input("Enter Party B's full name:") if st.session_state.party_b_name: st.session_state.step += 1 st.experimental_rerun()
+
+elif st.session_state.step == 4: st.session_state.party_b_address = st.text_input("Enter Party B's residential address:") if st.session_state.party_b_address: st.session_state.step += 1 st.experimental_rerun()
+
+elif st.session_state.step == 5: st.session_state.party_b_contact = st.text_input("Enter Party B's contact number:") if st.session_state.party_b_contact: st.session_state.step += 1 st.experimental_rerun()
+
+elif st.session_state.step == 6: # Format and Draft the document a_name = st.session_state.party_a_name.upper() a_addr = st.session_state.party_a_address.title() a_contact = st.session_state.party_a_contact
+
+b_name = st.session_state.party_b_name.upper()
+b_addr = st.session_state.party_b_address.title()
+b_contact = st.session_state.party_b_contact
+
+st.session_state.final_draft = f"""
+
+LEGAL AGREEMENT
+
+This agreement is entered into between:
+
+PARTY A: {a_name}, residing at {a_addr}, Contact: {a_contact}, and PARTY B: {b_name}, residing at {b_addr}, Contact: {b_contact}.
+
+The parties agree to the terms and conditions outlined in this agreement.
+
+[Insert specific agreement clauses here.]
+
+IN WITNESS WHEREOF, the parties have executed this agreement on this day.
+
+
+---
+
+{a_name}                    {b_name} """ st.subheader("📄 Drafted Document") st.text_area("", st.session_state.final_draft, height=300) st.button("Reset Form", on_click=lambda: st.session_state.clear())
 
 --- Module 2: Legal Clarification ---
 
-st.header("2. Legal Clarification") clarify_input = st.text_input("Ask a legal clarification question (e.g., What is a void contract?):")
+st.header("2. Legal Clarification") st.markdown("Ask a legal question (e.g., What is a void contract?)")
 
-def search_duckduckgo(query): url = f"https://api.duckduckgo.com/?q={query}&format=json&no_redirect=1&no_html=1" r = requests.get(url) data = r.json() return data.get("Abstract", "No direct answer found. Please try a more specific question.")
+def get_clarification(query): url = f"https://api.duckduckgo.com/?q={query}&format=json&no_redirect=1&no_html=1" res = requests.get(url) if res.status_code == 200: data = res.json() return data.get("Abstract", "No exact answer found. Try refining your query.") else: return "Error fetching answer."
 
-if clarify_input: clarification = search_duckduckgo(clarify_input) st.markdown("Clarification Result:") st.write(clarification)
-
---- Chat History (Optional display) ---
-
-st.header("Chat History") for user_q, bot_a in st.session_state.chat_memory: st.markdown(f"You: {user_q}") st.markdown(f"AI: {bot_a}")
+query = st.text_input("Type your legal question:") if query: answer = get_clarification(query) st.markdown("Answer:") st.write(answer)
