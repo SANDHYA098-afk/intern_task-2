@@ -3,7 +3,7 @@ import streamlit as st
 import requests
 
 st.set_page_config(page_title="Legal AI Assistant")
-st.title("📜 Legal Document & Clarification Assistant")
+st.title("📜 Legal Document Drafting & Clarification Assistant")
 
 # Initialize state for document drafting
 if "step" not in st.session_state:
