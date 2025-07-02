@@ -3,15 +3,16 @@ import requests
 
 st.set_page_config(page_title="Legal Chat Assistant", layout="centered")
 
-# --------------- Session State Setup ---------------
+# ------------------- Session Setup -------------------
 if "step" not in st.session_state: st.session_state.step = "start"
 if "doc_type" not in st.session_state: st.session_state.doc_type = ""
 if "law_type" not in st.session_state: st.session_state.law_type = ""
 if "answers" not in st.session_state: st.session_state.answers = {}
+if "party_stage" not in st.session_state: st.session_state.party_stage = "a_name"
 if "draft" not in st.session_state: st.session_state.draft = ""
 if "mode" not in st.session_state: st.session_state.mode = "chat"
 
-# --------------- Document and Law Types ---------------
+# ------------------- Data -------------------
 doc_types = [
     "Non-Disclosure Agreement (NDA)",
     "Lease Agreement",
@@ -30,7 +31,7 @@ law_types = {
     6: "Copyright Act, 1957"
 }
 
-# --------------- DuckDuckGo Legal Q&A Function (Module 2) ---------------
+# ------------------- Legal Q&A (DuckDuckGo API) -------------------
 def get_legal_answer(question):
     url = f"https://api.duckduckgo.com/?q={question}&format=json"
     try:
@@ -39,22 +40,20 @@ def get_legal_answer(question):
         if data.get("Abstract"):
             return f"📘 *Answer:* {data['Abstract']}"
         else:
-            return "🤔 I couldn't find a clear definition. Try using the keyword {Eg. 'void contract'}"
+            return "🤔 I couldn't find a clear definition."
     except Exception as e:
         return f"⚠ Error: {e}"
 
-# --------------- App Header and Mode ---------------
+# ------------------- App Header -------------------
 st.title("⚖ Legal Chat Assistant")
 mode = st.radio("Choose a mode:", ["📝 Draft Legal Document", "🔍 Ask Legal Question"])
 
-# ===================================================
-# 📝 MODE 1: Legal Document Drafting
-# ===================================================
+# ------------------- MODE 1: Document Drafting -------------------
 if mode == "📝 Draft Legal Document":
     user_input = st.text_input("You:")
 
     if user_input:
-        user_input = user_input.strip().lower()
+        user_input = user_input.strip()
 
         if st.session_state.step == "start":
             st.write("Assistant: What type of legal document do you want to draft?")
@@ -66,32 +65,52 @@ if mode == "📝 Draft Legal Document":
             if user_input.isdigit() and 1 <= int(user_input) <= len(doc_types):
                 st.session_state.doc_type = doc_types[int(user_input) - 1]
                 st.session_state.step = "party_a"
-                st.write("Assistant: Enter Party A's details (format):\n\n*Full Name\nAddress\nState\nContact Number*")
+                st.session_state.party_stage = "a_name"
+                st.write("Assistant: Enter Party A's full name:")
             else:
-                st.error("Please enter a number from the list above.")
+                st.error("Please enter a valid number from the list above.")
 
         elif st.session_state.step == "party_a":
-            lines = user_input.split('\n')
-            if len(lines) >= 4:
-                st.session_state.answers["party_a"] = user_input.strip()
+            if st.session_state.party_stage == "a_name":
+                st.session_state.answers["a_name"] = user_input
+                st.session_state.party_stage = "a_address"
+                st.write("Assistant: Enter Party A's address:")
+            elif st.session_state.party_stage == "a_address":
+                st.session_state.answers["a_address"] = user_input
+                st.session_state.party_stage = "a_state"
+                st.write("Assistant: Enter Party A's state:")
+            elif st.session_state.party_stage == "a_state":
+                st.session_state.answers["a_state"] = user_input
+                st.session_state.party_stage = "a_contact"
+                st.write("Assistant: Enter Party A's contact number:")
+            elif st.session_state.party_stage == "a_contact":
+                st.session_state.answers["a_contact"] = user_input
                 st.session_state.step = "party_b"
-                st.write("Assistant: Enter Party B's details (same format):")
-            else:
-                st.error("Please enter at least 4 lines.")
+                st.session_state.party_stage = "b_name"
+                st.write("Assistant: Enter Party B's full name:")
 
         elif st.session_state.step == "party_b":
-            lines = user_input.split('\n')
-            if len(lines) >= 4:
-                st.session_state.answers["party_b"] = user_input.strip()
+            if st.session_state.party_stage == "b_name":
+                st.session_state.answers["b_name"] = user_input
+                st.session_state.party_stage = "b_address"
+                st.write("Assistant: Enter Party B's address:")
+            elif st.session_state.party_stage == "b_address":
+                st.session_state.answers["b_address"] = user_input
+                st.session_state.party_stage = "b_state"
+                st.write("Assistant: Enter Party B's state:")
+            elif st.session_state.party_stage == "b_state":
+                st.session_state.answers["b_state"] = user_input
+                st.session_state.party_stage = "b_contact"
+                st.write("Assistant: Enter Party B's contact number:")
+            elif st.session_state.party_stage == "b_contact":
+                st.session_state.answers["b_contact"] = user_input
                 st.session_state.step = "jurisdiction"
-                st.write("Assistant: Enter the jurisdiction for this agreement (e.g., Chennai, Delhi, Mumbai):")
-            else:
-                st.error("Please enter at least 4 lines.")
+                st.write("Assistant: Enter the jurisdiction (e.g., Chennai, Delhi):")
 
         elif st.session_state.step == "jurisdiction":
-            st.session_state.answers["jurisdiction"] = user_input.strip()
+            st.session_state.answers["jurisdiction"] = user_input
             st.session_state.step = "law"
-            st.write("Assistant: Select the applicable law by number:")
+            st.write("Assistant: Select applicable law by number:")
             for i, law in law_types.items():
                 st.write(f"{i + 1}. {law}")
 
@@ -99,9 +118,9 @@ if mode == "📝 Draft Legal Document":
             if user_input.isdigit() and 1 <= int(user_input) <= len(law_types):
                 st.session_state.answers["law"] = law_types[int(user_input) - 1]
                 st.session_state.step = "generate"
-                st.write("Assistant: Generating your document...")
+                st.write("Assistant: Drafting your document...")
             else:
-                st.error("Please enter a valid number from the list.")
+                st.error("Please enter a valid number from the list above.")
 
         elif st.session_state.step == "generate":
             a = st.session_state.answers
@@ -112,12 +131,18 @@ if mode == "📝 Draft Legal Document":
             THIS AGREEMENT is made between:
 
             PARTY A:
-            {a['party_a']}
+            Name: {a['a_name']}
+            Address: {a['a_address']}
+            State: {a['a_state']}
+            Contact: {a['a_contact']}
 
             AND
 
             PARTY B:
-            {a['party_b']}
+            Name: {a['b_name']}
+            Address: {a['b_address']}
+            State: {a['b_state']}
+            Contact: {a['b_contact']}
 
             Jurisdiction: {a['jurisdiction']}
             Governing Law: {a['law']}
@@ -139,11 +164,9 @@ if mode == "📝 Draft Legal Document":
                     del st.session_state[key]
                 st.experimental_rerun()
 
-# ===================================================
-# 🔍 MODE 2: Legal Clarification (DuckDuckGo API)
-# ===================================================
+# ------------------- MODE 2: Legal Q&A -------------------
 elif mode == "🔍 Ask Legal Question":
-    question = st.text_input("Ask your legal question here:")
+    question = st.text_input("Ask your legal question:")
     if question:
         with st.spinner("Searching..."):
             result = get_legal_answer(question)
