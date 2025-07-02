@@ -6,7 +6,15 @@ st.title("📜 Legal Document & Clarification Assistant")
 
 #--- Memory State
 
-if "step" not in st.session_state: st.session_state.step = 0 st.session_state.party_a_name = "" st.session_state.party_a_address = "" st.session_state.party_a_contact = "" st.session_state.party_b_name = "" st.session_state.party_b_address = "" st.session_state.party_b_contact = "" st.session_state.final_draft = ""
+if "step" not in st.session_state: 
+  st.session_state.step = 0 
+  st.session_state.party_a_name = "" 
+  st.session_state.party_a_address = "" 
+  st.session_state.party_a_contact = "" 
+  st.session_state.party_b_name = "" 
+  st.session_state.party_b_address = "" 
+  st.session_state.party_b_contact = "" 
+  st.session_state.final_draft = ""
 
 #-- Module 1: Document Drafting ---
 
