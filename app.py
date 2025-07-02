@@ -4,11 +4,11 @@ import requests
 st.set_page_config(page_title="Legal AI Assistant") 
 st.title("📜 Legal Document & Clarification Assistant")
 
---- Memory State ---
+#--- Memory State
 
 if "step" not in st.session_state: st.session_state.step = 0 st.session_state.party_a_name = "" st.session_state.party_a_address = "" st.session_state.party_a_contact = "" st.session_state.party_b_name = "" st.session_state.party_b_address = "" st.session_state.party_b_contact = "" st.session_state.final_draft = ""
 
---- Module 1: Document Drafting ---
+#-- Module 1: Document Drafting ---
 
 st.header("1. Legal Document Drafting") st.markdown("Answer a few simple questions to generate your legal document.")
 
