@@ -9,6 +9,7 @@ st.title("📜 Legal Document & Clarification Assistant")
 if "step" not in st.session_state:
     st.session_state.step = 0
     st.session_state.doc_type = ""
+    st.session_state.custom_doc_type = ""
     st.session_state.date = ""
     st.session_state.state = ""
     st.session_state.party_a_name = ""
@@ -19,7 +20,7 @@ if "step" not in st.session_state:
     st.session_state.party_b_contact = ""
     st.session_state.final_draft = ""
 
-st.header("Legal Clarification")
+st.header("2. Legal Clarification")
 st.markdown("Ask a legal question (e.g., What is a void contract?)")
 
 def get_clarification(query):
@@ -37,16 +38,21 @@ if query:
     st.markdown("*Answer:*")
     st.write(answer)
 
-st.header("Legal Document Drafting")
+st.header("1. Legal Document Drafting")
 st.markdown("Answer a few simple questions to generate your legal document.")
 
 if st.session_state.step == 0:
     st.session_state.doc_type = st.selectbox(
         "What type of document is this?",
-        ["NDA", "Lease Agreement", "Employment Agreement", "Industrial Contract", "Others"]
+        ["NDA", "Lease Agreement", "Employment Agreement", "Industrial Contract", "Other"]
     )
     if st.session_state.doc_type:
-        st.session_state.step = 1
+        if st.session_state.doc_type == "Other":
+            st.session_state.custom_doc_type = st.text_input("Please specify the document type:")
+            if st.session_state.custom_doc_type:
+                st.session_state.step = 1
+        else:
+            st.session_state.step = 1
 
 if st.session_state.step == 1:
     st.session_state.date = st.text_input("Enter the date of agreement (e.g., July 2, 2025):")
@@ -89,7 +95,8 @@ if st.session_state.step == 8:
         st.session_state.step = 9
 
 if st.session_state.step == 9:
-    doc_type = st.session_state.doc_type.upper()
+    doc_type_raw = st.session_state.custom_doc_type if st.session_state.doc_type == "Other" else st.session_state.doc_type
+    doc_type = doc_type_raw.upper()
     date = st.session_state.date.title()
     state = st.session_state.state.title()
 
@@ -104,7 +111,7 @@ if st.session_state.step == 9:
     st.session_state.final_draft = f"""
 {doc_type}
 
-This {doc_type.lower()} is made on {date}, governed by the laws of {state}.
+This {doc_type_raw.lower()} is made on {date}, governed by the laws of {state}.
 
 BETWEEN:
 PARTY A: {a_name}, residing at {a_addr}, Contact: {a_contact},
@@ -113,7 +120,8 @@ PARTY B: {b_name}, residing at {b_addr}, Contact: {b_contact}.
 
 The parties agree to the terms and conditions outlined in this agreement.
 
-[Insert specific agreement clauses here.]
+[This document embodies the complete understanding and agreement between the Parties.
+Both parties acknowledges full comprehension and acceptance of its terms.]
 
 IN WITNESS WHEREOF, the parties have executed this agreement on the date written above.
 
