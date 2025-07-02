@@ -37,7 +37,7 @@ if query:
     st.markdown("*Answer:*")
     st.write(answer)
 
-st.header("1. Legal Document Drafting")
+st.header("Legal Document Drafting")
 st.markdown("Answer a few simple questions to generate your legal document.")
 
 if st.session_state.step == 0:
