@@ -23,21 +23,31 @@ st.header("Legal Clarification")
 st.markdown("Ask a legal question to clarify your doubts (e.g., void contract, voidable contract etc.)")
 
 def get_clarification(query):
-    url = f"https://api.duckduckgo.com/?q={query}&format=json&no_redirect=1&no_html=1"
     try:
-        res = requests.get(url, timeout=10)
-        data = res.json()
-        # Try Abstract first
-        answer = data.get("Abstract")
-        if answer:
-            return answer
-        # Try RelatedTopics if Abstract is empty
-        related = data.get("RelatedTopics", [])
-        if related and "Text" in related[0]:
-            return related[0]["Text"]
-        return "Sorry, I couldn't find a direct answer. Try rephrasing your question."
+        url = f"https://api.duckduckgo.com/?q={query}&format=json&no_redirect=1&no_html=1"
+        headers = {"User-Agent": "Mozilla/5.0"}  # required to avoid being blocked sometimes
+        res = requests.get(url, headers=headers, timeout=10)
+        if res.status_code == 200:
+            data = res.json()
+
+            # Try to get Abstract
+            abstract = data.get("Abstract")
+            if abstract:
+                return abstract
+
+            # Try to get the first Related Topic
+            related = data.get("RelatedTopics", [])
+            if related and isinstance(related, list):
+                for item in related:
+                    if isinstance(item, dict) and "Text" in item:
+                        return item["Text"]
+
+            return "Sorry, I couldn't find a clear answer. Please try rephrasing your question."
+        else:
+            return f"Failed to fetch data. Status code: {res.status_code}"
+
     except Exception as e:
-        return f"Error: {e}"
+        return f\"Error occurred: {str(e)}\"
 
 query = st.text_input("Type your legal question:")
 if query:
