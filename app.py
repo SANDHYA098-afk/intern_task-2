@@ -39,7 +39,7 @@ def get_legal_answer(question):
         if data.get("Abstract"):
             return f"📘 *Answer:* {data['Abstract']}"
         else:
-            return "🤔 I couldn't find a clear definition. Try using the keyword [Eg. "void contract"]"
+            return "🤔 I couldn't find a clear definition. Try using the keyword {Eg. 'void contract'}"
     except Exception as e:
         return f"⚠ Error: {e}"
 
