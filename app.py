@@ -3,11 +3,14 @@ import streamlit as st
 import requests
 
 st.set_page_config(page_title="Legal AI Assistant")
-st.title("📜 Legal Document Drafting & Clarification Assistant")
+st.title("📜 Legal Document & Clarification Assistant")
 
 # Initialize state for document drafting
 if "step" not in st.session_state:
     st.session_state.step = 0
+    st.session_state.doc_type = ""
+    st.session_state.date = ""
+    st.session_state.state = ""
     st.session_state.party_a_name = ""
     st.session_state.party_a_address = ""
     st.session_state.party_a_contact = ""
@@ -16,7 +19,7 @@ if "step" not in st.session_state:
     st.session_state.party_b_contact = ""
     st.session_state.final_draft = ""
 
-st.header("2. Legal Clarification")
+st.header("Legal Clarification")
 st.markdown("Ask a legal question (e.g., What is a void contract?)")
 
 def get_clarification(query):
@@ -26,7 +29,7 @@ def get_clarification(query):
         data = res.json()
         return data.get("Abstract", "No exact answer found. Try refining your query.")
     else:
-        return "OOPS :( Error Occured. TRY AGAIN"
+        return "Error fetching answer."
 
 query = st.text_input("Type your legal question:")
 if query:
@@ -34,40 +37,62 @@ if query:
     st.markdown("*Answer:*")
     st.write(answer)
 
-st.header("1. Legal Document Drafting")
+st.header("Legal Document Drafting")
 st.markdown("Answer a few simple questions to generate your legal document.")
 
 if st.session_state.step == 0:
-    st.session_state.party_a_name = st.text_input("Enter Party A's full name:")
-    if st.session_state.party_a_name:
+    st.session_state.doc_type = st.selectbox(
+        "What type of document is this?",
+        ["NDA", "Lease Agreement", "Employment Agreement", "Industrial Contract", "Others"]
+    )
+    if st.session_state.doc_type:
         st.session_state.step = 1
 
 if st.session_state.step == 1:
-    st.session_state.party_a_address = st.text_input("Enter Party A's residential address:")
-    if st.session_state.party_a_address:
+    st.session_state.date = st.text_input("Enter the date of agreement (e.g., July 2, 2025):")
+    if st.session_state.date:
         st.session_state.step = 2
 
 if st.session_state.step == 2:
-    st.session_state.party_a_contact = st.text_input("Enter Party A's contact number:")
-    if st.session_state.party_a_contact:
+    st.session_state.state = st.text_input("Enter the state of jurisdiction (e.g., California):")
+    if st.session_state.state:
         st.session_state.step = 3
 
 if st.session_state.step == 3:
-    st.session_state.party_b_name = st.text_input("Enter Party B's full name:")
-    if st.session_state.party_b_name:
+    st.session_state.party_a_name = st.text_input("Enter Party A's full name:")
+    if st.session_state.party_a_name:
         st.session_state.step = 4
 
 if st.session_state.step == 4:
-    st.session_state.party_b_address = st.text_input("Enter Party B's residential address:")
-    if st.session_state.party_b_address:
+    st.session_state.party_a_address = st.text_input("Enter Party A's residential address:")
+    if st.session_state.party_a_address:
         st.session_state.step = 5
 
 if st.session_state.step == 5:
-    st.session_state.party_b_contact = st.text_input("Enter Party B's contact number:")
-    if st.session_state.party_b_contact:
+    st.session_state.party_a_contact = st.text_input("Enter Party A's contact number:")
+    if st.session_state.party_a_contact:
         st.session_state.step = 6
 
 if st.session_state.step == 6:
+    st.session_state.party_b_name = st.text_input("Enter Party B's full name:")
+    if st.session_state.party_b_name:
+        st.session_state.step = 7
+
+if st.session_state.step == 7:
+    st.session_state.party_b_address = st.text_input("Enter Party B's residential address:")
+    if st.session_state.party_b_address:
+        st.session_state.step = 8
+
+if st.session_state.step == 8:
+    st.session_state.party_b_contact = st.text_input("Enter Party B's contact number:")
+    if st.session_state.party_b_contact:
+        st.session_state.step = 9
+
+if st.session_state.step == 9:
+    doc_type = st.session_state.doc_type.upper()
+    date = st.session_state.date.title()
+    state = st.session_state.state.title()
+
     a_name = st.session_state.party_a_name.upper()
     a_addr = st.session_state.party_a_address.title()
     a_contact = st.session_state.party_a_contact
@@ -77,10 +102,11 @@ if st.session_state.step == 6:
     b_contact = st.session_state.party_b_contact
 
     st.session_state.final_draft = f"""
-LEGAL AGREEMENT
+{doc_type}
 
-This agreement is entered into between:
+This {doc_type.lower()} is made on {date}, governed by the laws of {state}.
 
+BETWEEN:
 PARTY A: {a_name}, residing at {a_addr}, Contact: {a_contact},
 and
 PARTY B: {b_name}, residing at {b_addr}, Contact: {b_contact}.
@@ -89,7 +115,7 @@ The parties agree to the terms and conditions outlined in this agreement.
 
 [Insert specific agreement clauses here.]
 
-IN WITNESS WHEREOF, the parties have executed this agreement on this day.
+IN WITNESS WHEREOF, the parties have executed this agreement on the date written above.
 
 ____________________        ____________________
 {a_name}                    {b_name}
