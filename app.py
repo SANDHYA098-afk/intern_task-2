@@ -105,7 +105,7 @@ if mode == "📝 Draft Legal Document":
             elif st.session_state.party_stage == "b_contact":
                 st.session_state.answers["b_contact"] = user_input
                 st.session_state.step = "jurisdiction"
-                st.write("Assistant: Enter the jurisdiction (e.g., Chennai, Delhi):")
+                st.write("Assistant: Enter the jurisdiction (e.g., Chennai, Mumbai):")
 
         elif st.session_state.step == "jurisdiction":
             st.session_state.answers["jurisdiction"] = user_input
@@ -118,7 +118,7 @@ if mode == "📝 Draft Legal Document":
             if user_input.isdigit() and 1 <= int(user_input) <= len(law_types):
                 st.session_state.answers["law"] = law_types[int(user_input) - 1]
                 st.session_state.step = "generate"
-                st.experimental_rerun()  # Jump to generate step immediately
+              
             else:
                 st.error("Please enter a valid number from the list above.")
 
