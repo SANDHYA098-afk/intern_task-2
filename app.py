@@ -1,19 +1,14 @@
 import streamlit as st
 import requests
 
-st.set_page_config(page_title="Legal Chat Assistant", layout="centered")
+st.set_page_config(page_title="Legal Assistant", layout="centered")
 
 # ------------------- Session Setup -------------------
 if "step" not in st.session_state: st.session_state.step = "start"
-if "doc_type" not in st.session_state: st.session_state.doc_type = ""
-if "answers" not in st.session_state: st.session_state.answers = {}
-if "party_stage" not in st.session_state: st.session_state.party_stage = "a_name"
-if "draft" not in st.session_state: st.session_state.draft = ""
-if "submitted" not in st.session_state: st.session_state.submitted = False
-if "mode" not in st.session_state: st.session_state.mode = "chat"
-if "user_input" not in st.session_state: st.session_state.user_input = ""
+if "data" not in st.session_state: st.session_state.data = {}
+if "doc_drafted" not in st.session_state: st.session_state.doc_drafted = False
 
-# ------------------- Document & Law Types -------------------
+# ------------------- Document & Law Options -------------------
 doc_types = [
     "Non-Disclosure Agreement (NDA)",
     "Lease Agreement",
@@ -22,152 +17,151 @@ doc_types = [
     "Freelance Work Contract"
 ]
 
-law_types = {
-    0: "Indian Contract Act, 1872",
-    1: "Information Technology Act, 2000",
-    2: "Rent Control Act, 1948",
-    3: "Transfer of Property Act, 1882",
-    4: "Industrial Disputes Act, 1947",
-    5: "Shops and Establishments Act",
-    6: "Copyright Act, 1957"
-}
+law_types = [
+    "Indian Contract Act, 1872",
+    "Information Technology Act, 2000",
+    "Rent Control Act, 1948",
+    "Transfer of Property Act, 1882",
+    "Industrial Disputes Act, 1947",
+    "Shops and Establishments Act",
+    "Copyright Act, 1957"
+]
 
-# ------------------- Legal Q&A (DuckDuckGo API) -------------------
-def get_legal_answer(question):
-    url = f"https://api.duckduckgo.com/?q={question}&format=json"
-    try:
-        response = requests.get(url)
-        data = response.json()
-        if data.get("Abstract"):
-            return f"📘 *Answer:* {data['Abstract']}"
-        else:
-            return "🤔 I couldn't find a clear definition."
-    except Exception as e:
-        return f"⚠ Error: {e}"
+# ------------------- Mode Switch -------------------
+mode = st.radio("Choose Mode:", ["📝 Draft Legal Document", "🔍 Ask Legal Question"])
 
-# ------------------- UI -------------------
-st.title("⚖ Legal Chat Assistant")
-mode = st.radio("Choose a mode:", ["📝 Draft Legal Document", "🔍 Ask Legal Question"])
-
-# ------------------- Input Box With Auto-Clear -------------------
-st.text_input("You:", key="user_input", on_change=lambda: st.session_state.update({'submitted': True}))
-
-# ------------------- MODE 1: Legal Document Drafting -------------------
-if mode == "📝 Draft Legal Document" and st.session_state.submitted:
-    user_input = st.session_state.user_input.strip()
-    st.session_state["user_input"] = ""
-    st.session_state["submitted"] = False
+# ==========================
+# MODULE 1: DOCUMENT DRAFTING
+# ==========================
+if mode == "📝 Draft Legal Document":
+    st.title("📝 Draft a Legal Document")
 
     if st.session_state.step == "start":
-        st.write("Assistant: What type of legal document do you want to draft?")
-        for i, doc in enumerate(doc_types):
-            st.write(f"{i + 1}. {doc}")
-        st.session_state.step = "doc_type"
+        doc = st.selectbox("Select the type of document:", doc_types)
+        if st.button("Next"):
+            st.session_state.data["doc_type"] = doc
+            st.session_state.step = "a_name"
 
-    elif st.session_state.step == "doc_type":
-        if user_input.isdigit() and 1 <= int(user_input) <= len(doc_types):
-            st.session_state.doc_type = doc_types[int(user_input) - 1]
-            st.session_state.step = "party_a"
-            st.session_state.party_stage = "a_name"
-            st.write("Assistant: Enter Party A's full name:")
-        else:
-            st.error("Please enter a valid number from the list above.")
+    elif st.session_state.step == "a_name":
+        name = st.text_input("Party A - Full Name:")
+        if name:
+            st.session_state.data["a_name"] = name
+            st.session_state.step = "a_address"
 
-    elif st.session_state.step == "party_a":
-        if st.session_state.party_stage == "a_name":
-            st.session_state.answers["a_name"] = user_input
-            st.session_state.party_stage = "a_address"
-            st.write("Assistant: Enter Party A's address:")
-        elif st.session_state.party_stage == "a_address":
-            st.session_state.answers["a_address"] = user_input
-            st.session_state.party_stage = "a_state"
-            st.write("Assistant: Enter Party A's state:")
-        elif st.session_state.party_stage == "a_state":
-            st.session_state.answers["a_state"] = user_input
-            st.session_state.party_stage = "a_contact"
-            st.write("Assistant: Enter Party A's contact number:")
-        elif st.session_state.party_stage == "a_contact":
-            st.session_state.answers["a_contact"] = user_input
-            st.session_state.step = "party_b"
-            st.session_state.party_stage = "b_name"
-            st.write("Assistant: Enter Party B's full name:")
+    elif st.session_state.step == "a_address":
+        address = st.text_input("Party A - Address:")
+        if address:
+            st.session_state.data["a_address"] = address
+            st.session_state.step = "a_state"
 
-    elif st.session_state.step == "party_b":
-        if st.session_state.party_stage == "b_name":
-            st.session_state.answers["b_name"] = user_input
-            st.session_state.party_stage = "b_address"
-            st.write("Assistant: Enter Party B's address:")
-        elif st.session_state.party_stage == "b_address":
-            st.session_state.answers["b_address"] = user_input
-            st.session_state.party_stage = "b_state"
-            st.write("Assistant: Enter Party B's state:")
-        elif st.session_state.party_stage == "b_state":
-            st.session_state.answers["b_state"] = user_input
-            st.session_state.party_stage = "b_contact"
-            st.write("Assistant: Enter Party B's contact number:")
-        elif st.session_state.party_stage == "b_contact":
-            st.session_state.answers["b_contact"] = user_input
+    elif st.session_state.step == "a_state":
+        state = st.text_input("Party A - State:")
+        if state:
+            st.session_state.data["a_state"] = state
+            st.session_state.step = "a_contact"
+
+    elif st.session_state.step == "a_contact":
+        contact = st.text_input("Party A - Contact Number:")
+        if contact:
+            st.session_state.data["a_contact"] = contact
+            st.session_state.step = "b_name"
+
+    elif st.session_state.step == "b_name":
+        name = st.text_input("Party B - Full Name:")
+        if name:
+            st.session_state.data["b_name"] = name
+            st.session_state.step = "b_address"
+
+    elif st.session_state.step == "b_address":
+        address = st.text_input("Party B - Address:")
+        if address:
+            st.session_state.data["b_address"] = address
+            st.session_state.step = "b_state"
+
+    elif st.session_state.step == "b_state":
+        state = st.text_input("Party B - State:")
+        if state:
+            st.session_state.data["b_state"] = state
+            st.session_state.step = "b_contact"
+
+    elif st.session_state.step == "b_contact":
+        contact = st.text_input("Party B - Contact Number:")
+        if contact:
+            st.session_state.data["b_contact"] = contact
             st.session_state.step = "jurisdiction"
-            st.write("Assistant: Enter the jurisdiction (e.g., Chennai, Delhi):")
 
     elif st.session_state.step == "jurisdiction":
-        st.session_state.answers["jurisdiction"] = user_input
-        st.session_state.step = "law"
-        st.write("Assistant: Select applicable law by number:")
-        for i, law in law_types.items():
-            st.write(f"{i + 1}. {law}")
+        jurisdiction = st.text_input("Jurisdiction (e.g., Chennai):")
+        if jurisdiction:
+            st.session_state.data["jurisdiction"] = jurisdiction
+            st.session_state.step = "law"
 
     elif st.session_state.step == "law":
-        if user_input.isdigit() and 1 <= int(user_input) <= len(law_types):
-            st.session_state.answers["law"] = law_types[int(user_input) - 1]
+        law = st.selectbox("Select applicable law:", law_types)
+        if st.button("Generate Draft"):
+            st.session_state.data["law"] = law
+            st.session_state.doc_drafted = True
+            st.session_state.step = "done"
 
-            a = st.session_state.answers
-            doc_type = st.session_state.doc_type.upper()
-            draft = f"""
-            LEGAL DOCUMENT: {doc_type}
+    if st.session_state.doc_drafted:
+        d = st.session_state.data
+        draft = f"""
+        LEGAL DOCUMENT: {d['doc_type'].upper()}
 
-            THIS AGREEMENT is made between:
+        THIS AGREEMENT is made between:
 
-            PARTY A:
-            Name: {a['a_name']}
-            Address: {a['a_address']}
-            State: {a['a_state']}
-            Contact: {a['a_contact']}
+        PARTY A:
+        Name: {d['a_name']}
+        Address: {d['a_address']}
+        State: {d['a_state']}
+        Contact: {d['a_contact']}
 
-            AND
+        AND
 
-            PARTY B:
-            Name: {a['b_name']}
-            Address: {a['b_address']}
-            State: {a['b_state']}
-            Contact: {a['b_contact']}
+        PARTY B:
+        Name: {d['b_name']}
+        Address: {d['b_address']}
+        State: {d['b_state']}
+        Contact: {d['b_contact']}
 
-            Jurisdiction: {a['jurisdiction']}
-            Governing Law: {a['law']}
+        Jurisdiction: {d['jurisdiction']}
+        Governing Law: {d['law']}
 
-            Both parties agree to abide by the terms and conditions outlined in this document.
+        Both parties agree to abide by the terms and conditions outlined in this document.
 
-            [Disclaimer: This is an AI-generated draft. Please verify with legal counsel.]
-            """
-            st.session_state.draft = draft.strip()
-            st.session_state.step = "completed"
-        else:
-            st.error("Please enter a valid number from the list above.")
-
-    elif st.session_state.step == "completed":
-        st.subheader("📄 Document Preview")
-        st.code(st.session_state.draft, language="text")
-        st.download_button("⬇ Download Document", st.session_state.draft, file_name="legal_document.txt")
+        [Disclaimer: This is an AI-generated draft. Please review with legal counsel.]
+        """
+        st.markdown("---")
+        st.subheader("📄 Drafted Document")
+        st.code(draft.strip(), language="text")
 
         if st.button("🔄 Start Over"):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.experimental_rerun()
 
-# ------------------- MODE 2: Legal Q&A -------------------
+# ==========================
+# MODULE 2: LEGAL Q&A
+# ==========================
 elif mode == "🔍 Ask Legal Question":
-    question = st.text_input("Ask your legal question here:")
+    st.title("🔍 Ask a Legal Question")
+    question = st.text_input("Ask your legal question:")
+
+    def get_legal_answer(q):
+        url = f"https://api.duckduckgo.com/?q={q}&format=json"
+        try:
+            res = requests.get(url)
+            data = res.json()
+            if data.get("Abstract"):
+                return f"📘 *Answer:* {data['Abstract']}"
+            elif data.get("RelatedTopics"):
+                return f"🔗 Related: {data['RelatedTopics'][0].get('Text', 'No details found.')}"
+            else:
+                return "❓ Sorry, no clear answer was found."
+        except Exception as e:
+            return f"⚠ Error: {e}"
+
     if question:
         with st.spinner("Searching..."):
-            result = get_legal_answer(question)
-            st.markdown(result)
+            response = get_legal_answer(question)
+            st.markdown(response)
