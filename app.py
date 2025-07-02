@@ -20,7 +20,7 @@ if "step" not in st.session_state:
     st.session_state.party_b_contact = ""
     st.session_state.final_draft = ""
 
-st.header("2. Legal Clarification")
+st.header("Legal Clarification")
 st.markdown("Ask a legal question (e.g., What is a void contract?)")
 
 def get_clarification(query):
@@ -38,19 +38,13 @@ if query:
     st.markdown("*Answer:*")
     st.write(answer)
 
-st.header("1. Legal Document Drafting")
+st.header("Legal Document Drafting")
 st.markdown("Answer a few simple questions to generate your legal document.")
 
 if st.session_state.step == 0:
-    st.session_state.doc_type = st.selectbox(
-        "What type of document is this?",
-        ["NDA", "Lease Agreement", "Employment Agreement", "Industrial Contract", "Other"]
-    )
+    st.session_state.doc_type = st.text_input("What type of document is this? Eg.{"NDA", "Lease Agreement", "Employment Agreement", "Industrial Contract", "Other"})
     if st.session_state.doc_type:
-        if st.session_state.doc_type == "Other":
-            st.session_state.custom_doc_type = st.text_input("Please specify the document type:")
-            if st.session_state.custom_doc_type:
-                st.session_state.step = 1
+       st.session_state.step = 1
         else:
             st.session_state.step = 1
 
