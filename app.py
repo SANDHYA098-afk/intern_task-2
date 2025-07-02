@@ -23,37 +23,20 @@ st.header("Legal Clarification")
 st.markdown("Ask a legal question to clarify your doubts (e.g., void contract, voidable contract etc.)")
 
 def get_clarification(query):
-    try:
-        url = f"https://api.duckduckgo.com/?q={query}&format=json&no_redirect=1&no_html=1"
-        headers = {"User-Agent": "Mozilla/5.0"}  # required to avoid being blocked sometimes
-        res = requests.get(url, headers=headers, timeout=10)
-        if res.status_code == 200:
-            data = res.json()
-
-            # Try to get Abstract
-            abstract = data.get("Abstract")
-            if abstract:
-                return abstract
-
-            # Try to get the first Related Topic
-            related = data.get("RelatedTopics", [])
-            if related and isinstance(related, list):
-                for item in related:
-                    if isinstance(item, dict) and "Text" in item:
-                        return item["Text"]
-
-            return "Sorry, I couldn't find a clear answer. Please try rephrasing your question."
-        else:
-            return f"Failed to fetch data. Status code: {res.status_code}"
-
-    except Exception as e:
-        return f\"Error occurred: {str(e)}\"
+    url = f"https://api.duckduckgo.com/?q={query}&format=json&no_redirect=1&no_html=1"
+    res = requests.get(url)
+    if res.status_code == 200:
+        data = res.json()
+        return data.get("Abstract", "No exact answer found. Try rephrasing your query.")
+    else:
+        return "OOPS :( NETWORK ERROR, TRY AGAIN."
 
 query = st.text_input("Type your legal question:")
 if query:
     answer = get_clarification(query)
     st.markdown("*Answer:*")
     st.write(answer)
+
 
 st.header("Legal Document Drafting")
 st.markdown("Answer a few simple questions to generate your legal document.")
