@@ -24,12 +24,20 @@ st.markdown("Ask a legal question to clarify your doubts (e.g., void contract, v
 
 def get_clarification(query):
     url = f"https://api.duckduckgo.com/?q={query}&format=json&no_redirect=1&no_html=1"
-    res = requests.get(url)
-    if res.status_code == 200:
+    try:
+        res = requests.get(url, timeout=10)
         data = res.json()
-        return data.get("Abstract", "No exact answer found. Try refining your query.")
-    else:
-        return "Network Error, Try Again :("
+        # Try Abstract first
+        answer = data.get("Abstract")
+        if answer:
+            return answer
+        # Try RelatedTopics if Abstract is empty
+        related = data.get("RelatedTopics", [])
+        if related and "Text" in related[0]:
+            return related[0]["Text"]
+        return "Sorry, I couldn't find a direct answer. Try rephrasing your question."
+    except Exception as e:
+        return f"Error: {e}"
 
 query = st.text_input("Type your legal question:")
 if query:
