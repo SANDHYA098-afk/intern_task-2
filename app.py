@@ -12,7 +12,7 @@ if "party_stage" not in st.session_state: st.session_state.party_stage = "a_name
 if "draft" not in st.session_state: st.session_state.draft = ""
 if "mode" not in st.session_state: st.session_state.mode = "chat"
 
-# ------------------- Data -------------------
+# ------------------- Document & Law Types -------------------
 doc_types = [
     "Non-Disclosure Agreement (NDA)",
     "Lease Agreement",
@@ -40,11 +40,11 @@ def get_legal_answer(question):
         if data.get("Abstract"):
             return f"📘 *Answer:* {data['Abstract']}"
         else:
-            return "🤔 I couldn't find a clear definition."
+            return "🤔 I couldn't find a clear definition.Try using keywords such as 'void contract'"
     except Exception as e:
         return f"⚠ Error: {e}"
 
-# ------------------- App Header -------------------
+# ------------------- App UI -------------------
 st.title("⚖ Legal Chat Assistant")
 mode = st.radio("Choose a mode:", ["📝 Draft Legal Document", "🔍 Ask Legal Question"])
 
@@ -118,7 +118,7 @@ if mode == "📝 Draft Legal Document":
             if user_input.isdigit() and 1 <= int(user_input) <= len(law_types):
                 st.session_state.answers["law"] = law_types[int(user_input) - 1]
                 st.session_state.step = "generate"
-                st.write("Assistant: Drafting your document...")
+                st.experimental_rerun()  # Jump to generate step immediately
             else:
                 st.error("Please enter a valid number from the list above.")
 
@@ -153,6 +153,7 @@ if mode == "📝 Draft Legal Document":
             """
             st.session_state.draft = draft.strip()
             st.session_state.step = "completed"
+            st.experimental_rerun()
 
         elif st.session_state.step == "completed":
             st.subheader("📄 Document Preview")
