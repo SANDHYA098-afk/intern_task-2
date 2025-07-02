@@ -1,167 +1,54 @@
-import streamlit as st
-import requests
+app.py
 
-st.set_page_config(page_title="Legal Assistant", layout="centered")
+import streamlit as st from langchain.chains 
+import ConversationChain from langchain.memory 
+import ConversationBufferMemory from langchain.chat_models 
+import ChatOpenAI from langchain.prompts 
+import PromptTemplate 
+import requests from PyPDF2 
+import PdfReader 
+import tempfile 
+import os from langchain.vectorstores 
+import FAISS from langchain.embeddings 
+import HuggingFaceEmbeddings from langchain.text_splitter 
+import RecursiveCharacterTextSplitter from langchain.chains.question_answering 
+import load_qa_chain
 
-# ------------------- Session Setup -------------------
-if "step" not in st.session_state: st.session_state.step = "start"
-if "data" not in st.session_state: st.session_state.data = {}
-if "doc_drafted" not in st.session_state: st.session_state.doc_drafted = False
+=== Setup ===
 
-# ------------------- Document & Law Options -------------------
-doc_types = [
-    "Non-Disclosure Agreement (NDA)",
-    "Lease Agreement",
-    "Employment Contract",
-    "IT Services Agreement",
-    "Freelance Work Contract"
-]
+st.set_page_config(page_title="Legal AI Suite") st.title("🔖 Legal Conversational Agentic AI Suite")
 
-law_types = [
-    "Indian Contract Act, 1872",
-    "Information Technology Act, 2000",
-    "Rent Control Act, 1948",
-    "Transfer of Property Act, 1882",
-    "Industrial Disputes Act, 1947",
-    "Shops and Establishments Act",
-    "Copyright Act, 1957"
-]
+Memory and LLM setup
 
-# ------------------- Mode Switch -------------------
-mode = st.radio("Choose Mode:", ["📝 Draft Legal Document", "🔍 Ask Legal Question"])
+llm = ChatOpenAI(temperature=0.5) memory = ConversationBufferMemory() conversation = ConversationChain(llm=llm, memory=memory)
 
-# ==========================
-# MODULE 1: DOCUMENT DRAFTING
-# ==========================
-if mode == "📝 Draft Legal Document":
-    st.title("📝 Draft a Legal Document")
+=== Module 1: Conversational Legal Document Drafting ===
 
-    if st.session_state.step == "start":
-        doc = st.selectbox("Select the type of document:", doc_types)
-        if st.button("Next"):
-            st.session_state.data["doc_type"] = doc
-            st.session_state.step = "a_name"
+st.header("1. Document Drafting") if "doc_memory" not in st.session_state: st.session_state.doc_memory = []
 
-    elif st.session_state.step == "a_name":
-        name = st.text_input("Party A - Full Name:")
-        if name:
-            st.session_state.data["a_name"] = name
-            st.session_state.step = "a_address"
+user_input_draft = st.text_input("Describe the legal document you want to draft:") if user_input_draft: response = conversation.run(user_input_draft) st.session_state.doc_memory.append((user_input_draft, response)) st.markdown("Draft Output:") st.write(response)
 
-    elif st.session_state.step == "a_address":
-        address = st.text_input("Party A - Address:")
-        if address:
-            st.session_state.data["a_address"] = address
-            st.session_state.step = "a_state"
+=== Module 2: External Legal Clarification via DuckDuckGo ===
 
-    elif st.session_state.step == "a_state":
-        state = st.text_input("Party A - State:")
-        if state:
-            st.session_state.data["a_state"] = state
-            st.session_state.step = "a_contact"
+def search_duckduckgo(query): url = f"https://api.duckduckgo.com/?q={query}&format=json&no_redirect=1&no_html=1" r = requests.get(url) data = r.json() return data.get("Abstract", "No information found. Please refine your query.")
 
-    elif st.session_state.step == "a_contact":
-        contact = st.text_input("Party A - Contact Number:")
-        if contact:
-            st.session_state.data["a_contact"] = contact
-            st.session_state.step = "b_name"
+st.header("2. Legal Clarification") user_query = st.text_input("Ask a legal clarification question:") if user_query: result = search_duckduckgo(user_query) st.markdown("Answer from DuckDuckGo:") st.write(result)
 
-    elif st.session_state.step == "b_name":
-        name = st.text_input("Party B - Full Name:")
-        if name:
-            st.session_state.data["b_name"] = name
-            st.session_state.step = "b_address"
+=== Module 3: Document QA via Vector Search ===
 
-    elif st.session_state.step == "b_address":
-        address = st.text_input("Party B - Address:")
-        if address:
-            st.session_state.data["b_address"] = address
-            st.session_state.step = "b_state"
+st.header("3. Document QA")
 
-    elif st.session_state.step == "b_state":
-        state = st.text_input("Party B - State:")
-        if state:
-            st.session_state.data["b_state"] = state
-            st.session_state.step = "b_contact"
+if "vectordb" not in st.session_state: st.session_state.vectordb = None
 
-    elif st.session_state.step == "b_contact":
-        contact = st.text_input("Party B - Contact Number:")
-        if contact:
-            st.session_state.data["b_contact"] = contact
-            st.session_state.step = "jurisdiction"
+uploaded_file = st.file_uploader("Upload a legal document", type=["pdf", "txt", "docx"])
 
-    elif st.session_state.step == "jurisdiction":
-        jurisdiction = st.text_input("Jurisdiction (e.g., Chennai):")
-        if jurisdiction:
-            st.session_state.data["jurisdiction"] = jurisdiction
-            st.session_state.step = "law"
+if uploaded_file: if uploaded_file.type == "application/pdf": reader = PdfReader(uploaded_file) text = "".join([page.extract_text() for page in reader.pages]) else: text = uploaded_file.read().decode("utf-8")
 
-    elif st.session_state.step == "law":
-        law = st.selectbox("Select applicable law:", law_types)
-        if st.button("Generate Draft"):
-            st.session_state.data["law"] = law
-            st.session_state.doc_drafted = True
-            st.session_state.step = "done"
+splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+chunks = splitter.split_text(text)
+embed = HuggingFaceEmbeddings()
+db = FAISS.from_texts(chunks, embed)
+st.session_state.vectordb = db
+st.success("Document uploaded and processed.")
 
-    if st.session_state.doc_drafted:
-        d = st.session_state.data
-        draft = f"""
-        LEGAL DOCUMENT: {d['doc_type'].upper()}
-
-        THIS AGREEMENT is made between:
-
-        PARTY A:
-        Name: {d['a_name']}
-        Address: {d['a_address']}
-        State: {d['a_state']}
-        Contact: {d['a_contact']}
-
-        AND
-
-        PARTY B:
-        Name: {d['b_name']}
-        Address: {d['b_address']}
-        State: {d['b_state']}
-        Contact: {d['b_contact']}
-
-        Jurisdiction: {d['jurisdiction']}
-        Governing Law: {d['law']}
-
-        Both parties agree to abide by the terms and conditions outlined in this document.
-
-        [Disclaimer: This is an AI-generated draft. Please review with legal counsel.]
-        """
-        st.markdown("---")
-        st.subheader("📄 Drafted Document")
-        st.code(draft.strip(), language="text")
-
-        if st.button("🔄 Start Over"):
-            for key in list(st.session_state.keys()):
-                del st.session_state[key]
-            st.experimental_rerun()
-
-# ==========================
-# MODULE 2: LEGAL Q&A
-# ==========================
-elif mode == "🔍 Ask Legal Question":
-    st.title("🔍 Ask a Legal Question")
-    question = st.text_input("Ask your legal question:")
-
-    def get_legal_answer(q):
-        url = f"https://api.duckduckgo.com/?q={q}&format=json"
-        try:
-            res = requests.get(url)
-            data = res.json()
-            if data.get("Abstract"):
-                return f"📘 *Answer:* {data['Abstract']}"
-            elif data.get("RelatedTopics"):
-                return f"🔗 Related: {data['RelatedTopics'][0].get('Text', 'No details found.')}"
-            else:
-                return "❓ Sorry, no clear answer was found."
-        except Exception as e:
-            return f"⚠ Error: {e}"
-
-    if question:
-        with st.spinner("Searching..."):
-            response = get_legal_answer(question)
-            st.markdown(response)
+query_doc = st.text_input("Ask a question based on the uploaded document:") if query_doc and st.session_state.vectordb: retriever = st.session_state.vectordb.as_retriever() docs = retriever.get_relevant_documents(query_doc) qa_chain = load_qa_chain(llm=llm, chain_type="stuff") answer = qa_chain.run(input_documents=docs, question=query_doc) st.markdown("Answer from Document:") st.write(answer)
