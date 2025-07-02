@@ -111,7 +111,7 @@ if st.session_state.step == 9:
     st.session_state.final_draft = f"""
 {doc_type}
 
-This {doc_type_raw.lower()} is made on {date}, governed by the laws of {state}.
+This {doc_type_raw.upper()} is made on {date}, governed by the laws of {state}.
 
 BETWEEN:
 PARTY A: {a_name}, residing at {a_addr}, Contact: {a_contact},
@@ -126,7 +126,7 @@ Both parties acknowledges full comprehension and acceptance of its terms.]
 IN WITNESS WHEREOF, the parties have executed this agreement on the date written above.
 
 ____________________        ____________________
-{a_name}                    {b_name}
+PARTY A: {a_name}          PARTY B: {b_name}
 """
     st.subheader("📄 Drafted Document")
     st.text_area("", st.session_state.final_draft, height=300)
