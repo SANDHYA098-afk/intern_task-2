@@ -42,7 +42,7 @@ st.header("Legal Document Drafting")
 st.markdown("Answer a few simple questions to generate your legal document.")
 
 if st.session_state.step == 0:
-    st.session_state.doc_type = st.text_input("What type of document is this? Eg.{"NDA", "Lease Agreement", "Employment Agreement", "Industrial Contract", "Other"})
+    st.session_state.doc_type = st.text_input("What type of document is this? Eg.{"NDA", "Lease Agreement", "Employment Agreement", "Industrial Contract", "Other"}")
     if st.session_state.doc_type:
        st.session_state.step = 1
         else:
