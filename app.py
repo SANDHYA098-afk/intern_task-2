@@ -26,7 +26,7 @@ def get_clarification(query):
         data = res.json()
         return data.get("Abstract", "No exact answer found. Try refining your query.")
     else:
-        return "Error fetching answer."
+        return "OOPS :( Error Occured. TRY AGAIN"
 
 query = st.text_input("Type your legal question:")
 if query:
