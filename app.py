@@ -9,7 +9,6 @@ st.title("📜 Legal Document & Clarification Assistant")
 if "step" not in st.session_state:
     st.session_state.step = 0
     st.session_state.doc_type = ""
-    st.session_state.custom_doc_type = ""
     st.session_state.date = ""
     st.session_state.state = ""
     st.session_state.party_a_name = ""
@@ -21,7 +20,7 @@ if "step" not in st.session_state:
     st.session_state.final_draft = ""
 
 st.header("Legal Clarification")
-st.markdown("Ask a legal question (e.g., What is a void contract?)")
+st.markdown("Ask a legal question to clarify your doubts (e.g., void contract, voidable contract etc.)")
 
 def get_clarification(query):
     url = f"https://api.duckduckgo.com/?q={query}&format=json&no_redirect=1&no_html=1"
@@ -30,7 +29,7 @@ def get_clarification(query):
         data = res.json()
         return data.get("Abstract", "No exact answer found. Try refining your query.")
     else:
-        return "Error fetching answer."
+        return "Network Error, Try Again :("
 
 query = st.text_input("Type your legal question:")
 if query:
@@ -38,15 +37,13 @@ if query:
     st.markdown("*Answer:*")
     st.write(answer)
 
-st.header("Legal Document Drafting")
+st.header("1. Legal Document Drafting")
 st.markdown("Answer a few simple questions to generate your legal document.")
 
 if st.session_state.step == 0:
-    st.session_state.doc_type = st.text_input("What type of document is this? Eg.{"NDA", "Lease Agreement", "Employment Agreement", "Industrial Contract", "Other"}")
+    st.session_state.doc_type = st.text_input("What type of document is this? (e.g., NDA, Lease Agreement, etc.):")
     if st.session_state.doc_type:
-       st.session_state.step = 1
-        else:
-            st.session_state.step = 1
+        st.session_state.step = 1
 
 if st.session_state.step == 1:
     st.session_state.date = st.text_input("Enter the date of agreement (e.g., July 2, 2025):")
@@ -89,8 +86,8 @@ if st.session_state.step == 8:
         st.session_state.step = 9
 
 if st.session_state.step == 9:
-    doc_type_raw = st.session_state.custom_doc_type if st.session_state.doc_type == "Other" else st.session_state.doc_type
-    doc_type = doc_type_raw.upper()
+    doc_type = st.session_state.doc_type.upper()
+    doc_type_raw = st.session_state.doc_type.lower()
     date = st.session_state.date.title()
     state = st.session_state.state.title()
 
@@ -105,7 +102,7 @@ if st.session_state.step == 9:
     st.session_state.final_draft = f"""
 {doc_type}
 
-This {doc_type_raw.upper()} is made on {date}, governed by the laws of {state}.
+This {doc_type_raw} is made on {date}, governed by the laws of {state}.
 
 BETWEEN:
 PARTY A: {a_name}, residing at {a_addr}, Contact: {a_contact},
@@ -120,7 +117,7 @@ Both parties acknowledges full comprehension and acceptance of its terms.]
 IN WITNESS WHEREOF, the parties have executed this agreement on the date written above.
 
 ____________________        ____________________
-PARTY A: {a_name}          PARTY B: {b_name}
+{a_name}                    {b_name}
 """
     st.subheader("📄 Drafted Document")
     st.text_area("", st.session_state.final_draft, height=300)
